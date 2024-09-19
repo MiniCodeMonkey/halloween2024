@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Halloween Mirror</title>
+
+    <link rel="stylesheet" href="app.css" />
+
+    <!-- Sumerian Host dependencies -->
+    <script
+      type="text/javascript"
+      src="https://sdk.amazonaws.com/js/aws-sdk-2.645.0.min.js"
+    ></script>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" integrity="sha512-c42qTSw/wPZ3/5LBzD+Bw5f7bSF2oxou6wEb+I/lqeaKV5FDIfMvvRp772y4jcJLKuGUOpbJMdg/BTl50fJYAw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <style>.invisible { opacity: 0; }</style>
+
+    <script type="module" src="./dist/main.js"></script>
+  </head>
+  <body style="background: #000;">
+    <div id="mainScreen" class="screen loading">
+      <canvas id="renderCanvas" class="invisible"></canvas>
+
+      <div id="eyes" class="invisible" style="position: absolute; top: 20%; right: 20%; display: flex;">
+        <div style="border-radius: 100%; width: 40px; height: 40px; background: red; filter: blur(8px); margin-right: 30px;">&nbsp;</div>
+        <div style="border-radius: 100%; width: 40px; height: 40px; background: red; filter: blur(8px);">&nbsp;</div>
+      </div>
+
+      <div id="pumpkin" class="invisible" style="position: absolute; top: 60%; left: 30%; display: flex;">
+        <img src="dist/baby-pumpkin.png" width="150" />
+      </div>
+
+      <div id="uiPanel" class="hide panel">
+        <textarea id="speechText" rows="8">Hey! Kom lige lidt tættere på. Hvem er du der?</textarea>
+        <button id="speakButton">Speak</button>
+        
+        <label for="gestureSelect">Gestures</label>
+        <select id="gestureSelect">
+          <option></option>
+          <option value="aggressive">aggressive</option>
+          <option value="big">big</option>
+          <option value="defense">defense</option>
+          <option value="generic_a">generic_a</option>
+          <option value="generic_b">generic_b</option>
+          <option value="generic_c">generic_c</option>
+          <option value="heart">heart</option>
+          <option value="in">in</option>
+          <option value="many">many</option>
+          <option value="movement">movement</option>
+          <option value="one">one</option>
+          <option value="self">self</option>
+          <option value="wave">wave</option>
+          <option value="you">you</option>
+        </select>
+        <label for="emoteSelect">Emotes</label>
+        <select id="emoteSelect">
+          <option></option>
+          <option value="applause">applause</option>
+          <option value="bored">bored</option>
+          <option value="cheer">cheer</option>
+        </select>
+      </div>
+    </div>
+  </body>
+</html>
