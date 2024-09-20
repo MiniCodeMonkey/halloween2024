@@ -93,10 +93,18 @@ class Server extends Command
         }
     }
 
-    function record($filename = 'input_48k.wav', $max_duration = 30)
+    function record($filename = 'input_48k.wav', $max_duration = 10)
     {
         $filename = storage_path($filename);
-        $cmd = "rec -q -t wav -r 48000 -c 1 -b 16 $filename gain 10 silence 1 0.1 3% 1 1.0 3% trim 0 $max_duration";
+
+        if ($this->commandExists('arecord')) {
+            // Raspbian
+            $cmd = "arecord -D plughw:CARD=v2,DEV=0 -f S16_LE -c1 -r48000 -d $max_duration $filename";
+        } else {
+            // MacOS
+            $cmd = "rec -q -t wav -r 48000 -c 1 -b 16 $filename gain 10 silence 1 0.1 3% 1 1.0 3% trim 0 $max_duration";
+        }
+
         exec($cmd, $output, $return_var);
 
         return $return_var === 0;
@@ -106,6 +114,7 @@ class Server extends Command
     {
         $input_file = storage_path($input_file);
         $output_file = storage_path($output_file);
+
         $cmd = "sox $input_file -r 16000 $output_file";
 
         exec($cmd, $output, $return_var);
@@ -120,7 +129,31 @@ class Server extends Command
 
     function play($filename)
     {
-        exec("afplay $filename");
+        $tmpFilename = storage_path('tmp.wav');
+        exec(<<<CMD
+          sox $filename $tmpFilename \
+          pitch -200 \
+          reverb 50 50 50 \
+          contrast 50 \
+          treble +10 100 \
+          compand 0.3,1 6:-70,-60,-20 -5 -90 0.2 \
+          echos 0.8 0.7 100 0.25 120 0.3
+CMD
+        );
+
+        $filename = $tmpFilename;
+
+        if ($this->commandExists('afplay')) {
+            $cmd = 'afplay';
+        } else if ($this->commandExists('ffplay')) {
+            $cmd = 'ffplay -v 0 -nodisp -autoexit';
+        }
+
+        if (!$this->commandExists($cmd)) {
+            throw new RuntimeException('No audio player found');
+        }
+
+        exec("$cmd $filename");
     }
 
     private function say(string $message): bool
@@ -191,6 +224,12 @@ class Server extends Command
         // Remove any "hmm" sounds
         $pattern = '/(\b|,)hmm(\b|,)/im';
         return preg_replace($pattern, '', $text);
+    }
+
+    private function commandExists(string $cmd): bool
+    {
+        exec("command -v " . $cmd, $output, $returnValue);
+        return $returnValue === 0;
     }
 
 }
