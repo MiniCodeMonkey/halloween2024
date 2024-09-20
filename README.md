@@ -1,4 +1,4 @@
-# Halloween 2023
+# Halloween 2024
 3D Printing Models & Arduino code for various props
 
 ## Overview
@@ -26,3 +26,13 @@ ESP32-based motion activated device that will play a sneeze sound and activate a
 ### coffin
 
 ESP32-based motion activated coffin with motor for skeleton hand waving and sounds
+
+### fortune-teller
+
+Rasperry Pi based device. Uses microphone and speaker connection.
+
+* Receives question via microphone
+* Uses speech to text API to transcribe audio
+* Uses Anthropic's Claude API to come up with a response
+* Uses text to speech API to output response via speaker
+* Controls few lights via relays
