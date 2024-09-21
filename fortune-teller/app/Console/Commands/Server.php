@@ -42,9 +42,13 @@ class Server extends Command
         $this->speechClient = $speechClient;
         $this->pollyClient = $pollyClient;
 
-        $this->say('Velkommen til Den Mystiske Spåkones Bod! Spørg om din fremtid eller søg visdom fra det hinsides. Så sig mig. Hvad kan jeg spå for dig?');
+        $this->say('<speak>Velkommen til Den Mystiske Spåkones Bod! <break /> Spørg om din fremtid eller søg visdom fra det hinsides. <break /> Så <w role="amazon:VB">sig</w> mig. Hvad kan jeg spå for dig?</speak>');
 
         while (true) {
+            $this->line('Waiting...');
+            sleep(5);
+            continue;
+
             $this->line('Listening...');
             if ($this->recordAndResample()) {
                 $user_input = $this->transcribe('input_16k.wav');
@@ -129,14 +133,16 @@ class Server extends Command
 
     function play($filename)
     {
+        $this->line('Playing ' . $filename);
+
         $tmpFilename = storage_path('tmp.wav');
         exec(<<<CMD
           sox $filename $tmpFilename \
-          pitch -200 \
+          channels 1 \
+          pitch -150 \
           reverb 50 50 50 \
           contrast 50 \
           treble +10 100 \
-          compand 0.3,1 6:-70,-60,-20 -5 -90 0.2 \
           echos 0.8 0.7 100 0.25 120 0.3
 CMD
         );
@@ -167,7 +173,7 @@ CMD
                 $result = $this->pollyClient->synthesizeSpeech([
                     'OutputFormat' => 'mp3',
                     'Text' => $message,
-                    'TextType' => 'text',
+                    'TextType' => str_starts_with($message, '<speak>') ? 'ssml' : 'text',
                     'VoiceId' => 'Sofie',
                     'Engine' => 'neural',
                 ]);
