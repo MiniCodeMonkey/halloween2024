@@ -2,7 +2,10 @@
     "name": "laravel/laravel",
     "type": "project",
     "description": "The skeleton application for the Laravel framework.",
-    "keywords": ["laravel", "framework"],
+    "keywords": [
+        "laravel",
+        "framework"
+    ],
     "license": "MIT",
     "require": {
         "php": "^8.2",
@@ -10,7 +13,9 @@
         "google/cloud-speech": "^1.19",
         "laravel/framework": "^11.9",
         "laravel/tinker": "^2.9",
-        "mozex/anthropic-laravel": "^1.0"
+        "mozex/anthropic-laravel": "^1.0",
+        "danjohnson95/pinout": "dev-patch-1",
+        "ext-dio": "*"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
@@ -64,6 +69,12 @@
             "php-http/discovery": true
         }
     },
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/MiniCodeMonkey/pinout/"
+        }
+    ],
     "minimum-stability": "stable",
     "prefer-stable": true
 }
