@@ -49,10 +49,10 @@ class Server extends Command
         $this->audioRecorder = $audioRecorder;
         $this->presenceDetector = $presenceDetector;
 
-        $this->frontLights = Pinout::pin(3);
+        $this->frontLights = Pinout::pin(config('pinouts.front_lights'));
         $this->frontLights->makeOutput();
 
-        $this->magicBall = Pinout::pin(4);
+        $this->magicBall = Pinout::pin(config('pinouts.magic_ball'));
         $this->magicBall->makeOutput();
 
         $this->parLight = new DMXLightsManager(1, 1);

@@ -11,7 +11,7 @@ class PresenceDetector
 
     public function __construct()
     {
-        $this->pirSensor = Pinout::pin(4);
+        $this->pirSensor = Pinout::pin(config('pinouts.pir_sensor'));
         $this->pirSensor->makeInput();
     }
 

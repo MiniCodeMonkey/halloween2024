@@ -19,7 +19,6 @@ class SpeechToTextProcessor
 
     public function transcribe($filename)
     {
-        $filename = storage_path($filename);
         $content = file_get_contents($filename);
         $audio = (new RecognitionAudio())->setContent($content);
 

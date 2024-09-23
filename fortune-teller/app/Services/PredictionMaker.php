@@ -48,7 +48,7 @@ class PredictionMaker
         $text = preg_replace($pattern, '', $text);
 
         // Remove any "hmm" sounds
-        $pattern = '/(\b|,)hmm(\b|,)/im';
+        $pattern = '/(\b|,)(hmm|aha)(\b|,)/im';
         return preg_replace($pattern, '', $text);
     }
 }

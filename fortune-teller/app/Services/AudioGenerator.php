@@ -4,6 +4,7 @@ namespace App\Services;
 
 use Aws\Exception\AwsException;
 use Aws\Polly\PollyClient;
+use RuntimeException;
 use Symfony\Component\Process\Process;
 
 class AudioGenerator
@@ -46,10 +47,14 @@ class AudioGenerator
 
         $filename = $this->transposeAudio($filename);
 
-        if (ShellCommandChecker::doesCommandExist('afplay')) {
-            $process = new Process(['afplay', $filename]);
-        } else if (ShellCommandChecker::doesCommandExist('ffplay')) {
+        if (PHP_OS === 'Linux') {
             $process = new Process(['ffplay', '-v', '0', '-nodisp', '-autoexit', $filename]);
+        } else if (ShellCommandChecker::doesCommandExist('ffplay')) {
+            $process = new Process(['afplay', $filename]);
+        }
+
+        if (!isset($process)) {
+            throw new RuntimeException('No audio player found');
         }
 
         $process->mustRun();
