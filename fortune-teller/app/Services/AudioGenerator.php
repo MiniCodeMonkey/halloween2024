@@ -2,38 +2,33 @@
 
 namespace App\Services;
 
-use Aws\Exception\AwsException;
-use Aws\Polly\PollyClient;
+use ArdaGnsrn\ElevenLabs\ElevenLabs;
 use RuntimeException;
 use Symfony\Component\Process\Process;
 
 class AudioGenerator
 {
-    public function __construct(private PollyClient $pollyClient)
+    public function __construct(private ElevenLabs $elevenLabs)
     {
     }
 
     public function say(string $message): bool
     {
         $message = trim($message);
-        $messageKey = md5($message);
+        $voiceId = '7NsaqHdLuKNFvEfjpUno';
+
+        $messageKey = implode('_', ['el', $voiceId, md5($message)]);
 
         $filename = storage_path("app/messages/$messageKey.mp3");
         if (!file_exists($filename)) {
-            try {
-                $result = $this->pollyClient->synthesizeSpeech([
-                    'OutputFormat' => 'mp3',
-                    'Text' => $message,
-                    'TextType' => str_starts_with($message, '<speak>') ? 'ssml' : 'text',
-                    'VoiceId' => 'Sofie',
-                    'Engine' => 'neural',
-                ]);
+            $response = $this->elevenLabs->textToSpeech($voiceId, $message, 'eleven_multilingual_v2', [
+                'stability' => 0.30,
+                'similarity_boost' => 0.75,
+                'style' => 0.5,
+                'use_speaker_boost' => false
+            ]);
 
-                file_put_contents($filename, $result['AudioStream']->getContents());
-            } catch (AwsException $e) {
-                info("Error in text-to-speech: " . $e->getMessage());
-                return false;
-            }
+            file_put_contents($filename, $response->getResponse()->getBody()->getContents());
         }
 
         $this->play($filename);
@@ -45,11 +40,9 @@ class AudioGenerator
     {
         info('Playing ' . $filename);
 
-        $filename = $this->transposeAudio($filename);
-
         if (PHP_OS === 'Linux') {
             $process = new Process(['ffplay', '-v', '0', '-nodisp', '-autoexit', $filename]);
-        } else if (ShellCommandChecker::doesCommandExist('ffplay')) {
+        } else {
             $process = new Process(['afplay', $filename]);
         }
 
@@ -58,25 +51,5 @@ class AudioGenerator
         }
 
         $process->mustRun();
-    }
-
-    private function transposeAudio(string $filename): string
-    {
-        $tmpFilename = storage_path('tmp.wav');
-        $process = new Process([
-            'sox', $filename, $tmpFilename,
-            'channels', '1',
-            'pitch', '-150',
-            'reverb', '50', '50', '50',
-            'contrast', '50',
-            'treble', '+10', '100',
-            'echos', '0.8', '0.7', '50', '0.25', '60', '0.3'
-        ]);
-
-        $process->run();
-
-        return $process->isSuccessful()
-            ? $tmpFilename
-            : $filename;
     }
 }

@@ -2,8 +2,8 @@
 
 namespace App\Services;
 
-use Exception;
 use GuzzleHttp\Client;
+use Throwable;
 
 class DMXLightsManager
 {
@@ -53,15 +53,19 @@ class DMXLightsManager
     {
         $dmx_data = implode(',', $this->channels);
 
-        $response = $this->client->post('http://localhost:9090/set_dmx', [
-            'form_params' => [
-                'u' => $this->universe,
-                'd' => $dmx_data
-            ]
-        ]);
+        try {
+            $response = $this->client->post('http://localhost:9090/set_dmx', [
+                'form_params' => [
+                    'u' => $this->universe,
+                    'd' => $dmx_data
+                ]
+            ]);
 
-        if ($response->getStatusCode() !== 200) {
-            throw new Exception("Failed to send DMX data via OLA HTTP API");
+            if ($response->getStatusCode() !== 200) {
+                info("Failed to send DMX data via OLA HTTP API");
+            }
+        } catch (Throwable $e) {
+            info("DMX connection error: " . $e->getMessage());
         }
     }
 }

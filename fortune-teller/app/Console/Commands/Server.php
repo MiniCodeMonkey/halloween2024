@@ -7,9 +7,8 @@ use App\Services\AudioRecorder;
 use App\Services\DMXLightsManager;
 use App\Services\PredictionMaker;
 use App\Services\PresenceDetector;
+use App\Services\Relay;
 use App\Services\SpeechToTextProcessor;
-use DanJohnson95\Pinout\Entities\Pin;
-use DanJohnson95\Pinout\Pinout;
 use Illuminate\Console\Command;
 use Throwable;
 
@@ -33,8 +32,8 @@ class Server extends Command
     private AudioGenerator $audioGenerator;
     private PredictionMaker $predictionMaker;
     private AudioRecorder $audioRecorder;
-    private Pin $frontLights;
-    private Pin $magicBall;
+    private Relay $frontLights;
+    private Relay $magicBall;
     private DMXLightsManager $parLight;
     private PresenceDetector $presenceDetector;
 
@@ -49,13 +48,11 @@ class Server extends Command
         $this->audioRecorder = $audioRecorder;
         $this->presenceDetector = $presenceDetector;
 
-        $this->frontLights = Pinout::pin(config('pinouts.front_lights'));
-        $this->frontLights->makeOutput();
-        $this->frontLights->turnOff();
+        $this->frontLights = new Relay(config('pinouts.front_lights'));
+        $this->frontLights->turnOn();
 
-        $this->magicBall = Pinout::pin(config('pinouts.magic_ball'));
-        $this->magicBall->makeOutput();
-        $this->magicBall->turnOn();
+        $this->magicBall = new Relay(config('pinouts.magic_ball'));
+        $this->magicBall->turnOff();
 
         $this->parLight = new DMXLightsManager(1, 1);
         $this->parLight->setBrightness(255)->setColor(255, 0, 0)->setStrobe(0)->apply();
@@ -71,8 +68,9 @@ class Server extends Command
                     $this->closeSession();
                 }
 
-                sleep(20);
-                $this->frontLights->turnOff();
+                sleep(3);
+
+                $this->frontLights->turnOn();
             }
             sleep(1);
         }
@@ -80,24 +78,26 @@ class Server extends Command
 
     private function handleSession(bool $withIntroduction = true): void
     {
-        $this->parLight->setColor(0, 0, 255)->apply();
-        $this->magicBall->turnOn();
+        $this->parLight->setBrightness(255)->setColor(0, 0, 255)->apply();
+        $this->magicBall->turnOff();
 
         if ($withIntroduction) {
-            $this->audioGenerator->say('<speak>Velkommen til Den Mystiske Spåkones Bod! <break /> Spørg om din fremtid eller søg visdom fra det hinsides. <break /> Så <w role="amazon:VB">sig</w> mig. Hvad kan jeg spå for dig?</speak>');
+            $this->audioGenerator->say('Velkommen til Den Mystiske Spåkones Bod! Spørg om din fremtid eller søg visdom fra det hinsides. Så sig mig. Hvad kan jeg spå for dig?');
         }
 
-        $this->magicBall->turnOff();
+        $this->magicBall->turnOn();
 
         $this->line('Listening...');
         if ($filename = $this->audioRecorder->record(10)) {
-            $this->parLight->setColor(255, 0, 255)->setStrobe(100)->apply();
-            $this->audioGenerator->say('<speak>Jeg kigger i min krystalkugle...</speak>');
+            $this->parLight->setBrightness(255)->setColor(255, 0, 255)->setStrobe(100)->apply();
+            $this->audioGenerator->say('Jeg kigger i min krystalkugle...');
 
             $userInput = $this->speechToTextProcessor->transcribe($filename);
             $this->line("Heard: $userInput");
 
-            $this->parLight->setColor(0, 0, 255)->setStrobe(0)->apply();
+            $this->audioGenerator->say('Aaah ja... Lad mig se...');
+
+            $this->parLight->setBrightness(255)->setColor(0, 0, 255)->setStrobe(0)->apply();
 
             if (empty($userInput)) {
                 $this->audioGenerator->say('Jeg hørte ikke noget. Kan du gentage det?');
@@ -106,7 +106,9 @@ class Server extends Command
                 $response = $this->predictionMaker->makePrediction($userInput);
                 $this->line("AI says: $response");
 
-                $this->magicBall->turnOn();
+                $this->audioGenerator->say('Krystalkuglens svar er sikkert og vist. Dens visdom er urokkelig og den tager aldrig fejl... Lad os se...');
+
+                $this->magicBall->turnOff();
 
                 $this->audioGenerator->say($response);
             }
@@ -115,8 +117,9 @@ class Server extends Command
 
     private function closeSession()
     {
-        $this->frontLights->turnOn();
-        $this->magicBall->turnOn();
+        $this->frontLights->turnOff();
+        $this->magicBall->turnOff();
+        $this->parLight->setBrightness(0)->apply();
     }
 
 }
