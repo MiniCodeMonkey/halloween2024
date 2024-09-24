@@ -6,7 +6,7 @@ use App\Services\AudioGenerator;
 use App\Services\AudioRecorder;
 use App\Services\DMXLightsManager;
 use App\Services\PredictionMaker;
-use App\Services\PresenceDetector;
+use App\Services\PushButton;
 use App\Services\Relay;
 use App\Services\SpeechToTextProcessor;
 use Illuminate\Console\Command;
@@ -36,12 +36,12 @@ class Server extends Command
     private Relay $frontLights;
     private Relay $magicBall;
     private DMXLightsManager $parLight;
-    private PresenceDetector $presenceDetector;
+    private PushButton $pushButton;
 
     /**
      * Execute the console command.
      */
-    public function handle(SpeechToTextProcessor $speechToTextProcessor, AudioGenerator $audioGenerator, PredictionMaker $predictionMaker, AudioRecorder $audioRecorder, PresenceDetector $presenceDetector)
+    public function handle(SpeechToTextProcessor $speechToTextProcessor, AudioGenerator $audioGenerator, PredictionMaker $predictionMaker, AudioRecorder $audioRecorder)
     {
         App::setLocale('da');
 
@@ -49,7 +49,7 @@ class Server extends Command
         $this->audioGenerator = $audioGenerator;
         $this->predictionMaker = $predictionMaker;
         $this->audioRecorder = $audioRecorder;
-        $this->presenceDetector = $presenceDetector;
+        $this->pushButton = new PushButton(config('pinouts.push_button'));
 
         $this->frontLights = new Relay(config('pinouts.front_lights'));
         $this->frontLights->turnOn();
@@ -61,7 +61,7 @@ class Server extends Command
         $this->parLight->setBrightness(255)->setColor(255, 0, 0)->setStrobe(0)->apply();
 
         while (true) {
-            if ($this->presenceDetector->isPresent()) {
+            if ($this->pushButton->isPushed()) {
                 try {
                     $this->handleSession();
                 } catch (Throwable $e) {
@@ -74,8 +74,9 @@ class Server extends Command
                 sleep(3);
 
                 $this->frontLights->turnOn();
+            } else {
+                usleep(1_000_000 / 25);
             }
-            sleep(1);
         }
     }
 
@@ -118,7 +119,7 @@ class Server extends Command
         }
     }
 
-    private function closeSession()
+    private function closeSession(): void
     {
         $this->frontLights->turnOff();
         $this->magicBall->turnOff();
