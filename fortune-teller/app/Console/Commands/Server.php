@@ -51,9 +51,11 @@ class Server extends Command
 
         $this->frontLights = Pinout::pin(config('pinouts.front_lights'));
         $this->frontLights->makeOutput();
+        $this->frontLights->turnOff();
 
         $this->magicBall = Pinout::pin(config('pinouts.magic_ball'));
         $this->magicBall->makeOutput();
+        $this->magicBall->turnOn();
 
         $this->parLight = new DMXLightsManager(1, 1);
         $this->parLight->setBrightness(255)->setColor(255, 0, 0)->setStrobe(0)->apply();
@@ -70,7 +72,7 @@ class Server extends Command
                 }
 
                 sleep(20);
-                $this->frontLights->turnOn();
+                $this->frontLights->turnOff();
             }
             sleep(1);
         }
@@ -79,13 +81,13 @@ class Server extends Command
     private function handleSession(bool $withIntroduction = true): void
     {
         $this->parLight->setColor(0, 0, 255)->apply();
-        $this->magicBall->turnOff();
+        $this->magicBall->turnOn();
 
         if ($withIntroduction) {
             $this->audioGenerator->say('<speak>Velkommen til Den Mystiske Spåkones Bod! <break /> Spørg om din fremtid eller søg visdom fra det hinsides. <break /> Så <w role="amazon:VB">sig</w> mig. Hvad kan jeg spå for dig?</speak>');
         }
 
-        $this->magicBall->turnOn();
+        $this->magicBall->turnOff();
 
         $this->line('Listening...');
         if ($filename = $this->audioRecorder->record(10)) {
@@ -98,15 +100,13 @@ class Server extends Command
             $this->parLight->setColor(0, 0, 255)->setStrobe(0)->apply();
 
             if (empty($userInput)) {
-                if ($this->presenceDetector->isPresent()) {
-                    $this->audioGenerator->say('Jeg hørte ikke noget. Kan du gentage det?');
-                    $this->handleSession(false);
-                }
+                $this->audioGenerator->say('Jeg hørte ikke noget. Kan du gentage det?');
+                $this->handleSession(false);
             } else {
                 $response = $this->predictionMaker->makePrediction($userInput);
                 $this->line("AI says: $response");
 
-                $this->magicBall->turnOff();
+                $this->magicBall->turnOn();
 
                 $this->audioGenerator->say($response);
             }
@@ -115,8 +115,8 @@ class Server extends Command
 
     private function closeSession()
     {
-        $this->frontLights->turnOff();
-        $this->magicBall->turnOff();
+        $this->frontLights->turnOn();
+        $this->magicBall->turnOn();
     }
 
 }

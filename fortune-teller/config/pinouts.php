@@ -9,7 +9,7 @@ return [
     | GPIO/BCM pins
     */
 
-    'front_lights' => 17,
-    'magic_ball' => 27,
-    'pir_sensor' => 23,
+    'front_lights' => 27,
+    'magic_ball' => 17,
+    'push_button' => 23,
 ];

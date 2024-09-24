@@ -11,12 +11,12 @@ class PresenceDetector
 
     public function __construct()
     {
-        $this->pirSensor = Pinout::pin(config('pinouts.pir_sensor'));
+        $this->pirSensor = Pinout::pin(config('pinouts.push_button'));
         $this->pirSensor->makeInput();
     }
 
     public function isPresent(): bool
     {
-        return $this->pirSensor->isOff();
+        return $this->pirSensor->isOn();
     }
 }
