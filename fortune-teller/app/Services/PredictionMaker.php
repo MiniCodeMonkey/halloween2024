@@ -7,15 +7,13 @@ use Exception;
 
 class PredictionMaker
 {
-    const MODEL_INSTRUCTIONS = "Du er en venlig og underholdende 'spåkone' ved en familievenlig halloweenfest. Lyt og svar altid på dansk. Din rolle er at give positive, opmuntrende og sjove svar på gæsternes spørgsmål. Brug lette halloweenreferencer og efterårstemaer i dine svar, men hold det hyggeligt og ikke skræmmende. Dine 'spådomme' skal være kreative, positive og passende for alle aldre. Svar i max 2-3 sætninger. Tilpas dine svar til dansk kultur og traditioner, når det er passende.";
-
     public function makePrediction(string $userInput, int $attempts = 0): ?string
     {
         try {
             $result = Anthropic::messages()->create([
                 'model' => config('anthropic.model'),
                 'max_tokens' => 300,
-                'system' => self::MODEL_INSTRUCTIONS,
+                'system' => __('fortune-teller.llm-instructions'),
                 'messages' => [
                     ['role' => 'user', 'content' => $userInput]
                 ]
@@ -40,7 +38,7 @@ class PredictionMaker
     private function transformAIResponse(?string $text): string
     {
         if (empty($text)) {
-            return 'Jeg er desværre ikke i stand til at spå din fremtid lige nu. Prøv igen senere.';
+            return __('fortune-teller.llm-error');
         }
 
         // Remove any text between asterisks (doesn't work well with the text-to-speech service)

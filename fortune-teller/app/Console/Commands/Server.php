@@ -10,6 +10,7 @@ use App\Services\PresenceDetector;
 use App\Services\Relay;
 use App\Services\SpeechToTextProcessor;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\App;
 use Throwable;
 
 class Server extends Command
@@ -42,6 +43,8 @@ class Server extends Command
      */
     public function handle(SpeechToTextProcessor $speechToTextProcessor, AudioGenerator $audioGenerator, PredictionMaker $predictionMaker, AudioRecorder $audioRecorder, PresenceDetector $presenceDetector)
     {
+        App::setLocale('da');
+
         $this->speechToTextProcessor = $speechToTextProcessor;
         $this->audioGenerator = $audioGenerator;
         $this->predictionMaker = $predictionMaker;
@@ -63,7 +66,7 @@ class Server extends Command
                     $this->handleSession();
                 } catch (Throwable $e) {
                     $this->error($e->getMessage());
-                    $this->audioGenerator->say('Jeg kan desværre ikke spå din fremtid lige nu. Prøv igen senere.');
+                    $this->audioGenerator->say(__('fortune-teller.error-occurred'));
                 } finally {
                     $this->closeSession();
                 }
@@ -82,7 +85,7 @@ class Server extends Command
         $this->magicBall->turnOff();
 
         if ($withIntroduction) {
-            $this->audioGenerator->say('Velkommen til Den Mystiske Spåkones Bod! Spørg om din fremtid eller søg visdom fra det hinsides. Så sig mig. Hvad kan jeg spå for dig?');
+            $this->audioGenerator->say(__('fortune-teller.introduction'));
         }
 
         $this->magicBall->turnOn();
@@ -90,23 +93,23 @@ class Server extends Command
         $this->line('Listening...');
         if ($filename = $this->audioRecorder->record(10)) {
             $this->parLight->setBrightness(255)->setColor(255, 0, 255)->setStrobe(100)->apply();
-            $this->audioGenerator->say('Jeg kigger i min krystalkugle...');
+            $this->audioGenerator->say(__('fortune-teller.processing1'));
 
             $userInput = $this->speechToTextProcessor->transcribe($filename);
             $this->line("Heard: $userInput");
 
-            $this->audioGenerator->say('Aaah ja... Lad mig se...');
+            $this->audioGenerator->say(__('fortune-teller.processing2'));
 
             $this->parLight->setBrightness(255)->setColor(0, 0, 255)->setStrobe(0)->apply();
 
             if (empty($userInput)) {
-                $this->audioGenerator->say('Jeg hørte ikke noget. Kan du gentage det?');
+                $this->audioGenerator->say(__('fortune-teller.nothing-transcribed'));
                 $this->handleSession(false);
             } else {
                 $response = $this->predictionMaker->makePrediction($userInput);
                 $this->line("AI says: $response");
 
-                $this->audioGenerator->say('Krystalkuglens svar er sikkert og vist. Dens visdom er urokkelig og den tager aldrig fejl... Lad os se...');
+                $this->audioGenerator->say(__('fortune-teller.processing3'));
 
                 $this->magicBall->turnOff();
 
