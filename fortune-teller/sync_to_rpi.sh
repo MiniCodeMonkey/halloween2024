@@ -4,7 +4,7 @@ SOURCE_DIR="./"
 DESTINATION="pi@fortune-teller.local:/home/pi/app"
 
 sync_and_restart() {
-    rsync -avz --delete -e ssh "$SOURCE_DIR/" "$DESTINATION"
+    rsync -avz --delete -e ssh --exclude 'storage/' "$SOURCE_DIR/" "$DESTINATION"
     ssh -n pi@fortune-teller.local "sudo systemctl restart fortune-teller.service"
 }
 

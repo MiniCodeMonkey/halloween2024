@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use Google\ApiCore\OperationResponse;
 use Google\Cloud\Speech\V1\RecognitionAudio;
 use Google\Cloud\Speech\V1\RecognitionConfig;
 use Google\Cloud\Speech\V1\RecognitionConfig\AudioEncoding;
@@ -12,13 +13,14 @@ use RuntimeException;
 class SpeechToTextProcessor
 {
     private SpeechClient $speechClient;
+    private ?OperationResponse $operation = null;
 
     public function __construct(SpeechClient $speechClient)
     {
         $this->speechClient = $speechClient;
     }
 
-    public function transcribe($filename)
+    public function transcribe($filename): void
     {
         $languageCode = App::isLocale('da') ? 'da-DK' : 'en-US';
 
@@ -33,20 +35,28 @@ class SpeechToTextProcessor
             ->setLanguageCode($languageCode)
             ->setAudioChannelCount(1);
 
-        $operation = $this->speechClient->longRunningRecognize($config, $audio);
-        $operation->pollUntilComplete();
+        $this->operation = $this->speechClient->longRunningRecognize($config, $audio);
+    }
 
-        if ($operation->operationSucceeded()) {
-            $response = $operation->getResult();
-            $transcription = '';
-            foreach ($response->getResults() as $result) {
-                $alternatives = $result->getAlternatives();
-                $mostLikely = $alternatives[0];
-                $transcription .= $mostLikely->getTranscript();
-            }
-            return $transcription;
-        } else {
-            throw new RuntimeException($operation->getError());
+    public function getTranscription(): string
+    {
+        if (!$this->operation) {
+            throw new RuntimeException('Please call transcribe() first');
         }
+
+        $this->operation->pollUntilComplete();
+
+        if (!$this->operation->operationSucceeded()) {
+            throw new RuntimeException($this->operation->getError());
+        }
+
+        $response = $this->operation->getResult();
+        $transcription = '';
+        foreach ($response->getResults() as $result) {
+            $alternatives = $result->getAlternatives();
+            $mostLikely = $alternatives[0];
+            $transcription .= $mostLikely->getTranscript();
+        }
+        return $transcription;
     }
 }

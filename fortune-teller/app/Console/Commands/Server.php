@@ -55,7 +55,11 @@ class Server extends Command
         $this->magicBall->turnOff();
 
         $this->parLight = new DMXLightsManager(1, 1);
-        $this->parLight->setBrightness(255)->setColor(255, 0, 0)->setStrobe(0)->apply();
+        $this->parLight
+            ->setBrightness(255)
+            ->setColor(255, 0, 0)
+            ->setStrobe(0)
+            ->apply();
 
         $this->line('We\'re live with locale: ' . app()->getLocale());
         $this->audioGenerator->say(__('fortune-teller.awake'));
@@ -71,7 +75,7 @@ class Server extends Command
                     $this->closeSession();
                 }
 
-                sleep(3);
+                sleep(5);
 
                 $this->frontLights->turnOn();
             } else {
@@ -80,9 +84,14 @@ class Server extends Command
         }
     }
 
-    private function handleSession(bool $withIntroduction = true): void
+    private function handleSession(bool $withIntroduction = true, int $attempts = 0): void
     {
-        $this->parLight->setBrightness(255)->setColor(0, 0, 255)->apply();
+        $this->parLight
+            ->setBrightness(255)
+            ->setColor(0, 255, 255)
+            ->setStrobe(0)
+            ->apply();
+
         $this->magicBall->turnOff();
 
         if ($withIntroduction) {
@@ -93,26 +102,26 @@ class Server extends Command
 
         $this->line('Listening...');
         if ($filename = $this->audioRecorder->record(10)) {
-            $this->parLight->setBrightness(255)->setColor(255, 0, 255)->setStrobe(100)->apply();
+            $this->parLight->setStrobe(100)->apply();
             $this->audioGenerator->say(__('fortune-teller.processing1'));
 
-            $userInput = $this->speechToTextProcessor->transcribe($filename);
+            $this->speechToTextProcessor->transcribe($filename);
+            $this->audioGenerator->say(__('fortune-teller.processing2')); // This is essentially our "loading" message
+            $userInput = $this->speechToTextProcessor->getTranscription();
             $this->line("Heard: $userInput");
 
-            $this->audioGenerator->say(__('fortune-teller.processing2'));
-
-            $this->parLight->setBrightness(255)->setColor(0, 0, 255)->setStrobe(0)->apply();
+            $this->parLight->setStrobe(0)->apply();
 
             if (empty($userInput)) {
-                $this->audioGenerator->say(__('fortune-teller.nothing-transcribed'));
-                $this->handleSession(false);
+                if ($attempts < 2) {
+                    $this->audioGenerator->say(__('fortune-teller.nothing-transcribed'));
+                    $this->handleSession(false, $attempts + 1);
+                }
             } else {
                 $response = $this->predictionMaker->makePrediction($userInput);
                 $this->line("AI says: $response");
 
-                $this->audioGenerator->say(__('fortune-teller.processing3'));
-
-                $this->magicBall->turnOff();
+                // $this->audioGenerator->say(__('fortune-teller.processing3'));
 
                 $this->audioGenerator->say($response);
             }
@@ -121,6 +130,7 @@ class Server extends Command
 
     private function closeSession(): void
     {
+        sleep(1);
         $this->frontLights->turnOff();
         $this->magicBall->turnOff();
         $this->parLight->setBrightness(0)->apply();
