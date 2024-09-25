@@ -10,7 +10,6 @@ use App\Services\PushButton;
 use App\Services\Relay;
 use App\Services\SpeechToTextProcessor;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\App;
 use Throwable;
 
 class Server extends Command
@@ -43,8 +42,6 @@ class Server extends Command
      */
     public function handle(SpeechToTextProcessor $speechToTextProcessor, AudioGenerator $audioGenerator, PredictionMaker $predictionMaker, AudioRecorder $audioRecorder)
     {
-        App::setLocale('da');
-
         $this->speechToTextProcessor = $speechToTextProcessor;
         $this->audioGenerator = $audioGenerator;
         $this->predictionMaker = $predictionMaker;
@@ -59,6 +56,9 @@ class Server extends Command
 
         $this->parLight = new DMXLightsManager(1, 1);
         $this->parLight->setBrightness(255)->setColor(255, 0, 0)->setStrobe(0)->apply();
+
+        $this->line('We\'re live with locale: ' . app()->getLocale());
+        $this->audioGenerator->say(__('fortune-teller.awake'));
 
         while (true) {
             if ($this->pushButton->isPushed()) {

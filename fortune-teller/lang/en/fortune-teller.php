@@ -1,6 +1,7 @@
 <?php
 
 return [
+    'awake' => 'I have awoken from my slumber. Press the button to ask me about your future.',
     'error-occurred' => 'I cannot predict your future right now. Please try again later.',
     'introduction' => 'Welcome to the Mysterious Fortune Teller\'s Booth! Ask about your future or seek wisdom from beyond. So tell me. What can I predict for you?',
     'processing1' => 'I am looking into my crystal ball...',

@@ -1,6 +1,7 @@
 <?php
 
 return [
+    'awake' => 'Jeg er vågnet fra min søvn. Tryk på knappen for at spørge mig om din fremtid.',
     'error-occurred' => 'Jeg kan desværre ikke spå din fremtid lige nu. Prøv igen senere.',
     'introduction' => 'Velkommen til Den Mystiske Spåkones Bod! Spørg om din fremtid eller søg visdom fra det hinsides. Så sig mig. Hvad kan jeg spå for dig?',
     'processing1' => 'Jeg kigger i min krystalkugle...',
