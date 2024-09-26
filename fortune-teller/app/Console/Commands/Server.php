@@ -9,7 +9,10 @@ use App\Services\PredictionMaker;
 use App\Services\PushButton;
 use App\Services\Relay;
 use App\Services\SpeechToTextProcessor;
+use Carbon\Carbon;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Lang;
 use Throwable;
 
 class Server extends Command
@@ -36,6 +39,8 @@ class Server extends Command
     private Relay $magicBall;
     private DMXLightsManager $parLight;
     private PushButton $pushButton;
+    private Carbon $lastTauntTime;
+    private ?string $lastTauntKey = null;
 
     /**
      * Execute the console command.
@@ -61,8 +66,13 @@ class Server extends Command
             ->setStrobe(0)
             ->apply();
 
-        $this->line('We\'re live with locale: ' . app()->getLocale());
-        $this->audioGenerator->say(__('fortune-teller.awake'));
+        $this->line('We\'re live with locale: ' . App::getLocale());
+
+        if (PHP_OS === 'Linux') {
+            $this->preloadRecordings();
+        }
+
+        $this->taunt();
 
         while (true) {
             if ($this->pushButton->isPushed()) {
@@ -80,6 +90,7 @@ class Server extends Command
                 $this->frontLights->turnOn();
             } else {
                 usleep(1_000_000 / 25);
+                $this->tauntIfNeeded();
             }
         }
     }
@@ -121,8 +132,6 @@ class Server extends Command
                 $response = $this->predictionMaker->makePrediction($userInput);
                 $this->line("AI says: $response");
 
-                // $this->audioGenerator->say(__('fortune-teller.processing3'));
-
                 $this->audioGenerator->say($response);
             }
         }
@@ -134,6 +143,40 @@ class Server extends Command
         $this->frontLights->turnOff();
         $this->magicBall->turnOff();
         $this->parLight->setBrightness(0)->apply();
+    }
+
+    private function preloadRecordings(): void
+    {
+        $this->line('Preloading recordings...');
+        $translations = Lang::getLoader()->load(App::getLocale(), 'fortune-teller');
+        foreach ($translations as $key => $translation) {
+            if ($key !== 'llm-instructions') {
+                $this->audioGenerator->cache($translation);
+            }
+        }
+    }
+
+    private function taunt(): void
+    {
+        $this->line('Taunting...');
+        $tauntsCount = config('fortune-teller.taunts.count');
+
+        do {
+            $translationKey = 'fortune-teller.taunt_' . mt_rand(1, $tauntsCount);
+        } while ($translationKey === $this->lastTauntKey);
+
+        if (trans()->has($translationKey)) {
+            $this->lastTauntTime = now();
+            $this->lastTauntKey = $translationKey;
+            $this->audioGenerator->sayAsync(__($translationKey));
+        }
+    }
+
+    private function tauntIfNeeded(): void
+    {
+        if ($this->lastTauntTime->diffInSeconds(now()) > mt_rand(...config('fortune-teller.taunts.seconds_between'))) {
+            $this->taunt();
+        }
     }
 
 }
