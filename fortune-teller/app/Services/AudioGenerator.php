@@ -3,44 +3,34 @@
 namespace App\Services;
 
 use ArdaGnsrn\ElevenLabs\ElevenLabs;
-use RuntimeException;
-use Symfony\Component\Process\Process;
+use Illuminate\Process\InvokedProcessPool;
+use Illuminate\Process\Pool;
+use Illuminate\Support\Facades\Process;
 use Throwable;
 
 class AudioGenerator
 {
-    private ?Process $playProcess = null;
+    const VOICE_ID = '7NsaqHdLuKNFvEfjpUno';
+    private ?InvokedProcessPool $playPool = null;
 
-    public function __construct(private ElevenLabs $elevenLabs, private AudioAmplifier $audioAmplifier)
+    public function __construct(private ElevenLabs $elevenLabs, private AudioAmplifier $audioAmplifier, private AudioAnalyzer $audioAnalyzer)
     {
     }
 
     public function say(string $message, bool $playAfterGenerating = true, bool $playAsync = false): bool
     {
         $message = trim($message);
-        $voiceId = '7NsaqHdLuKNFvEfjpUno';
-        $messageKey = implode('_', ['el', $voiceId, md5($message)]);
-        $filename = storage_path("app/messages/$messageKey.mp3");
-
         info(($playAfterGenerating ? 'Saying' : 'Caching') . ': ' . $message);
 
-        if (!file_exists($filename)) {
-            info("\t" . 'Generating audio file: ' . $filename);
-            $response = $this->elevenLabs->textToSpeech($voiceId, $message, 'eleven_multilingual_v2', [
-                'stability' => 0.30,
-                'similarity_boost' => 0.75,
-                'style' => 0.5,
-                'use_speaker_boost' => false
-            ]);
+        $messageKey = $this->getMessageKey($message);
+        $audioFilename = storage_path("app/messages/$messageKey.mp3");
 
-            file_put_contents($filename, $response->getResponse()->getBody()->getContents());
-
-            $amplifiedFilename = storage_path("app/messages/{$messageKey}_amplified.mp3");
+        if (!file_exists($audioFilename)) {
+            info("\t" . 'Generating audio file: ' . $audioFilename);
+            $this->convertTextToSpeech($message, $audioFilename);
 
             try {
-                $this->audioAmplifier->amplifyAudioFile($filename, $amplifiedFilename);
-                @unlink($filename);
-                rename($amplifiedFilename, $filename);
+                $this->audioAmplifier->amplifyAudioFile($audioFilename);
             } catch (Throwable $e) {
                 info("\t" . 'Failed to amplify audio: ' . $e->getMessage());
             }
@@ -48,8 +38,10 @@ class AudioGenerator
             info("\t" . 'Using cached audio file');
         }
 
+        $this->audioAnalyzer->analyze($audioFilename);
+
         if ($playAfterGenerating) {
-            $this->play($filename, $playAsync);
+            $this->play($audioFilename, $playAsync);
         }
 
         return true;
@@ -69,24 +61,41 @@ class AudioGenerator
     {
         info('Playing ' . $filename);
 
-        if ($this->playProcess) {
-            $this->playProcess->stop();
+        if ($this->playPool) {
+            info('Stopping pool');
+            $this->playPool->stop();
         }
 
         if (PHP_OS === 'Linux') {
-            $this->playProcess = new Process(['ffplay', '-v', '0', '-nodisp', '-autoexit', $filename]);
+            $playProcess = ['ffplay', '-v', '0', '-nodisp', '-autoexit', $filename];
         } else {
-            $this->playProcess = new Process(['afplay', $filename]);
+            $playProcess = ['afplay', $filename];
         }
 
-        if (!isset($this->playProcess)) {
-            throw new RuntimeException('No audio player found');
-        }
+        $this->playPool = Process::pool(function (Pool $pool) use ($filename, $playProcess) {
+            $pool->path(base_path())->command($playProcess);
+            //$pool->path(base_path())->command(['php', 'artisan', 'audio:animate', $filename]);
+        })->start();
 
-        if ($async) {
-            $this->playProcess->start();
-        } else {
-            $this->playProcess->mustRun();
+        if (!$async) {
+            $this->playPool->wait();
         }
+    }
+
+    private function getMessageKey(string $message): string
+    {
+        return implode('_', ['el', self::VOICE_ID, md5($message)]);
+    }
+
+    private function convertTextToSpeech(string $message, string $audioFilename): void
+    {
+        $response = $this->elevenLabs->textToSpeech(self::VOICE_ID, $message, 'eleven_multilingual_v2', [
+            'stability' => 0.30,
+            'similarity_boost' => 0.75,
+            'style' => 0.5,
+            'use_speaker_boost' => false
+        ]);
+
+        file_put_contents($audioFilename, $response->getResponse()->getBody()->getContents());
     }
 }

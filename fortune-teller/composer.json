@@ -11,9 +11,9 @@
         "php": "^8.2",
         "ardagnsrn/elevenlabs-laravel": "dev-patch-1",
         "aws/aws-sdk-php-laravel": "^3.9",
-        "danjohnson95/pinout": "dev-patch-1",
+        "danjohnson95/pinout": "dev-feat/updates",
         "google/cloud-speech": "^1.19",
-        "laravel/framework": "^11.9",
+        "laravel/framework": "dev-feat/add-process-stop-method as v11.23.5",
         "laravel/tinker": "^2.9",
         "mozex/anthropic-laravel": "^1.0"
     },
@@ -77,6 +77,10 @@
         {
             "type": "vcs",
             "url": "https://github.com/MiniCodeMonkey/elevenlabs-laravel/"
+        },
+        {
+            "type": "vcs",
+            "url": "https://github.com/MiniCodeMonkey/laravel-framework/"
         }
     ],
     "minimum-stability": "stable",

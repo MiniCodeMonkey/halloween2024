@@ -34,4 +34,24 @@ class Relay
             $this->pin->turnOn(); // Yes, this is opposite of what you'd expect
         }
     }
+
+    public function isOn(): ?bool
+    {
+        if ($this->pin) {
+            return $this->pin->isOff(); // Yes, this is opposite of what you'd expect
+        }
+
+        return null;
+    }
+
+    public function toggle(): void
+    {
+        if ($isOn = $this->isOn() !== null) {
+            if ($isOn) {
+                $this->turnOff();
+            } else {
+                $this->turnOn();
+            }
+        }
+    }
 }

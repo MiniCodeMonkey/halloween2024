@@ -68,10 +68,7 @@ class Server extends Command
 
         $this->line('We\'re live with locale: ' . App::getLocale());
 
-        if (PHP_OS === 'Linux') {
-            $this->preloadRecordings();
-        }
-
+        $this->preloadRecordings();
         $this->taunt();
 
         while (true) {
