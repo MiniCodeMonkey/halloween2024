@@ -74,7 +74,7 @@ class AudioGenerator
 
         $this->playPool = Process::pool(function (Pool $pool) use ($filename, $playProcess) {
             $pool->path(base_path())->command($playProcess);
-            //$pool->path(base_path())->command(['php', 'artisan', 'audio:animate', $filename]);
+            $pool->path(base_path())->command(['php', 'artisan', 'audio:animate', $filename]);
         })->start();
 
         if (!$async) {
