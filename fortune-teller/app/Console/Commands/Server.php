@@ -110,7 +110,7 @@ class Server extends Command
 
         $this->line('Listening...');
         if ($filename = $this->audioRecorder->record(10)) {
-            $this->parLight->setStrobe(100)->apply();
+            $this->parLight->setStrobe(200)->apply();
             $this->audioGenerator->say(__('fortune-teller.processing1'));
 
             $this->speechToTextProcessor->transcribe($filename);
