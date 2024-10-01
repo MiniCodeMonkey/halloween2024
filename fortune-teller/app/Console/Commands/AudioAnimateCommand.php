@@ -2,8 +2,8 @@
 
 namespace App\Console\Commands;
 
-use App\Services\Led;
 use DanJohnson95\Pinout\Entities\Pin;
+use DanJohnson95\Pinout\Pinout;
 use Illuminate\Console\Command;
 
 class AudioAnimateCommand extends Command
@@ -42,13 +42,13 @@ class AudioAnimateCommand extends Command
                 usleep(100);
             }
 
-            $this->getOutput()->write("\033[2J");
+            //$this->getOutput()->write("\033[2J");
 
             if ($entry['on']) {
-                $this->error('AAAA');
+                //$this->error('AAAA');
                 $this->led->turnOn();
             } else {
-                $this->info('AAAA');
+                //$this->info('AAAA');
                 $this->led->turnOff();
             }
         }

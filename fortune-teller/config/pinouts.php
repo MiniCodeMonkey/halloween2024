@@ -12,5 +12,5 @@ return [
     'front_lights' => 27,
     'magic_ball' => 17,
     'push_button' => 23,
-    'led_eyes' => 22,
+    'led_eyes' => 13,
 ];
