@@ -121,19 +121,27 @@ class Server extends Command
 
             if (empty($userInput)) {
                 if ($attempts < 2) {
+                    $this->parLight
+                        ->setBrightness(255)
+                        ->setColor(255, 0, 0)
+                        ->apply();
+
                     $this->audioGenerator->say(__('fortune-teller.nothing-transcribed'));
                     $this->handleSession(false, $attempts + 1);
                 }
             } else {
+                $this->parLight->setColor(0, 255, 0)->apply();
                 $this->line('Waiting for sound to finish...');
                 $this->audioGenerator->blockWhilePlaying();
                 $this->audioGenerator->sayAsync(__('fortune-teller.processing_' . mt_rand(0, 9)));
 
+                $this->parLight->setColor(0, 0, 255)->apply();
                 $response = $this->predictionMaker->makePrediction($userInput);
                 $this->line('Got LLM response...');
                 $this->line('Caching audio while sound is playing...');
                 $this->audioGenerator->cache($response);
 
+                $this->parLight->setColor(0, 255, 255)->apply();
                 $this->line('Waiting for sound to finish...');
                 $this->audioGenerator->blockWhilePlaying();
                 $this->audioGenerator->say($response);
