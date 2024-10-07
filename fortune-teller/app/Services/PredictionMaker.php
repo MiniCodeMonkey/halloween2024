@@ -2,7 +2,7 @@
 
 namespace App\Services;
 
-use Anthropic\Laravel\Facades\Anthropic;
+use EchoLabs\Prism\Prism;
 use Exception;
 
 class PredictionMaker
@@ -10,16 +10,14 @@ class PredictionMaker
     public function makePrediction(string $userInput, int $attempts = 0): ?string
     {
         try {
-            $result = Anthropic::messages()->create([
-                'model' => config('anthropic.model'),
-                'max_tokens' => 300,
-                'system' => __('fortune-teller.llm-instructions'),
-                'messages' => [
-                    ['role' => 'user', 'content' => $userInput]
-                ]
-            ]);
+            $prism = Prism::text()
+                ->using('anthropic', 'claude-3-haiku-20240307')
+                ->withSystemPrompt(__('fortune-teller.llm-instructions'))
+                ->withPrompt($userInput);
 
-            return $this->transformAIResponse($result->content[0]->text);
+            $response = $prism();
+
+            return $this->transformAIResponse($response->text);
         } catch (Exception $e) {
             info('Claude: ' . $e->getMessage());
             $attempts++;

@@ -11,6 +11,7 @@ use Throwable;
 class AudioGenerator
 {
     const VOICE_ID = '7NsaqHdLuKNFvEfjpUno';
+    const ENABLE_TTS = true;
     private ?InvokedProcessPool $playPool = null;
 
     public function __construct(private ElevenLabs $elevenLabs, private AudioAmplifier $audioAmplifier, private AudioAnalyzer $audioAnalyzer)
@@ -21,6 +22,10 @@ class AudioGenerator
     {
         $message = trim($message);
         info(($playAfterGenerating ? 'Saying' : 'Caching') . ': ' . $message);
+
+        if (!self::ENABLE_TTS) {
+            return false;
+        }
 
         $messageKey = $this->getMessageKey($message);
         $audioFilename = storage_path("app/messages/$messageKey.mp3");

@@ -13,7 +13,7 @@ class AudioRecorder
         if (PHP_OS === 'Linux') {
             $process = new Process(['arecord', '-D', 'plughw:CARD=v2,DEV=0', '-f', 'S16_LE', '-c1', '-r48000', '-d', $maxDurationSeconds, $filename]);
         } else {
-            $process = new Process(['rec', '-q', '-t', 'wav', '-r', '48000', '-c', '1', '-b', '16', $filename, 'gain', '10', 'silence', '1', '0.1', '3%', '1', '1.0', '3%', 'trim', '0', $maxDurationSeconds]);
+            $process = new Process(['rec', '-q', '-t', 'wav', '-r', '48000', '-c', '1', '-b', '16', $filename, 'trim', '0', $maxDurationSeconds]);
         }
 
         $process->mustRun();
