@@ -1,4 +1,5 @@
 #include <WiFi.h>
+#include <WiFiMulti.h>
 #include <ArduinoOTA.h>
 #include <TelnetStream.h>
 
@@ -11,6 +12,8 @@
 
 #define PROJECTOR_IP_ADDRESS "192.168.2.247"
 #define PROJECTOR_PORT 1337
+
+WiFiMulti WiFiMulti;
 
 int pirValue;
 
@@ -30,10 +33,9 @@ void setup() {
 }
 
 void initWiFi() {
-  WiFi.mode(WIFI_STA);
-  WiFi.begin("Halloween", "veryspooky");
-  while (WiFi.status() != WL_CONNECTED) {
-    Serial.print(WiFi.status());
+  WiFiMulti.addAP("Halloween", "veryspooky");
+
+  while (WiFiMulti.run() != WL_CONNECTED) {
     Serial.println(".");
     delay(1000);
 
@@ -67,11 +69,12 @@ void loop() {
 
     digitalWrite(RELAY_FANS_PIN, HIGH);
     delay(2000);
+
+    notifyProjector();
+
     digitalWrite(RELAY_FOG_PIN, HIGH);
     delay(2000);
     digitalWrite(RELAY_FOG_PIN, LOW);
-
-    notifyProjector();
 
     delay(2000);
     digitalWrite(RELAY_FANS_PIN, LOW);
@@ -89,7 +92,8 @@ void notifyProjector() {
 
   if (client.connect(PROJECTOR_IP_ADDRESS, PROJECTOR_PORT)) {
     Serial.println("Connected to TCP server");
-    client.print("Hello!");
+    client.print("trigger");
+    client.stop();
   } else {
     Serial.println("Failed to connect to TCP server");
   }
