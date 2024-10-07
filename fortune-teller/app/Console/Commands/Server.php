@@ -109,12 +109,11 @@ class Server extends Command
         $this->magicBall->turnOn();
 
         $this->line('Listening...');
-        if ($filename = $this->audioRecorder->record(10)) {
+        if ($filename = $this->audioRecorder->record(7)) {
             $this->parLight->setStrobe(200)->apply();
-            $this->audioGenerator->say(__('fortune-teller.processing1'));
+            $this->audioGenerator->sayAsync(__('fortune-teller.processing_intro'));
 
             $this->speechToTextProcessor->transcribe($filename);
-            $this->audioGenerator->say(__('fortune-teller.processing2')); // This is essentially our "loading" message
             $userInput = $this->speechToTextProcessor->getTranscription();
             $this->line("Heard: $userInput");
 
@@ -126,9 +125,17 @@ class Server extends Command
                     $this->handleSession(false, $attempts + 1);
                 }
             } else {
-                $response = $this->predictionMaker->makePrediction($userInput);
-                $this->line("AI says: $response");
+                $this->line('Waiting for sound to finish...');
+                $this->audioGenerator->blockWhilePlaying();
+                $this->audioGenerator->sayAsync(__('fortune-teller.processing_' . mt_rand(0, 9)));
 
+                $response = $this->predictionMaker->makePrediction($userInput);
+                $this->line('Got LLM response...');
+                $this->line('Caching audio while sound is playing...');
+                $this->audioGenerator->cache($response);
+
+                $this->line('Waiting for sound to finish...');
+                $this->audioGenerator->blockWhilePlaying();
                 $this->audioGenerator->say($response);
             }
         }

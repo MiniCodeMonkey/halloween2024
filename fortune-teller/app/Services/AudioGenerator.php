@@ -21,6 +21,7 @@ class AudioGenerator
     public function say(string $message, bool $playAfterGenerating = true, bool $playAsync = false): bool
     {
         $message = trim($message);
+        $message = trim($message, ', ');
         info(($playAfterGenerating ? 'Saying' : 'Caching') . ': ' . $message);
 
         if (!self::ENABLE_TTS) {
@@ -62,6 +63,11 @@ class AudioGenerator
         return $this->say($message, playAfterGenerating: false);
     }
 
+    public function blockWhilePlaying(): void
+    {
+        $this->playPool?->wait();
+    }
+
     private function play(string $filename, bool $async = false): void
     {
         info('Playing ' . $filename);
@@ -94,12 +100,16 @@ class AudioGenerator
 
     private function convertTextToSpeech(string $message, string $audioFilename): void
     {
+        $start = microtime(true);
         $response = $this->elevenLabs->textToSpeech(self::VOICE_ID, $message, 'eleven_multilingual_v2', [
             'stability' => 0.30,
             'similarity_boost' => 0.75,
             'style' => 0.5,
             'use_speaker_boost' => false
         ]);
+        $end = microtime(true);
+
+        info('Text-to-speech took ' . round($end - $start, 2) . 's for: "' . $message . '"');
 
         file_put_contents($audioFilename, $response->getResponse()->getBody()->getContents());
     }

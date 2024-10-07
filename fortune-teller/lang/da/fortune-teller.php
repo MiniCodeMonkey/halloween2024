@@ -3,8 +3,19 @@
 return [
     'error-occurred' => 'Jeg kan desværre ikke spå din fremtid lige nu. Prøv igen senere.',
     'introduction' => 'Velkommen til Den Mystiske Spåkones Bod! Spørg om din fremtid eller søg visdom fra det hinsides. Så sig mig. Hvad kan jeg spå for dig?',
-    'processing1' => 'Jeg kigger i min krystalkugle...',
-    'processing2' => 'Aaah ja... Lad mig se...',
+    'processing_intro' => 'Jeg kigger i min krystalkugle...',
+
+    'processing_0' => 'Mmm... jeg fornemmer noget ganske interessant... Skæbnens energier samler sig omkring dig. Lad os se, hvad de afslører...',
+    'processing_1' => 'Lad mig lige konsultere med ånderne et øjeblik... De hvisker ivrigt til mig fra den anden side. Dine svar er på vej til os nu...',
+    'processing_2' => 'Skæbnens tråde væves lige nu... spændende! Jeg kan se, hvordan de fletter sig sammen i et unikt mønster, kun for dig. Det er fascinerende...',
+    'processing_3' => 'Krystalkuglen bliver klarere... ja, jeg ser det tydeligt nu... Billeder og symboler dukker op og forsvinder igen. Din fremtid tager form...',
+    'processing_4' => 'Efterårsblæsten hvisker hemmeligheder... lyt godt efter... Kan du høre, hvordan bladene rasler med budskaber kun for dig? Lad os tyde dem sammen...',
+    'processing_5' => 'Græskarrets lys flakker... din skæbne tager form... Se, hvordan skyggerne danser på væggen. De fortæller en historie om din fremtid...',
+    'processing_6' => 'Åh! Stjernerne danser for mine øjne... dit svar kommer snart... De funkler og blinker med en særlig intensitet i aften. Din skæbne må være ganske speciel...',
+    'processing_7' => 'De gamle runer taler til mig... meget interessant... Deres urgamle visdom åbenbarer sig langsomt. Lad os se, hvilke hemmeligheder de gemmer for dig...',
+    'processing_8' => 'Jeg ser gennem tidens tåger... din fremtid bliver tydeligere... Lag på lag af mystik trækker sig tilbage. Snart vil vi kunne se, hvad skæbnen har i vente for dig...',
+    'processing_9' => 'Heksekedlen bobler ivrigt... din skæbne er næsten klar... Magiske dampe stiger op og former sig til symboler og tegn. Lad os sammen tyde deres betydning...',
+
     'nothing-transcribed' => 'Jeg kunne ikke rigtigt høre dig. Kan du gentage det?',
     'llm-instructions' => 'Du er en "spåkone" til en familievenlig Halloween-fest. Lyt og svar altid på Dansk. Din rolle er at give sjove svar på gæsternes spørgsmål. Brug eventuelt Halloween-referencer og efterårstemaer i dine svar. Dine "forudsigelser" bør være kreative, positive og passende for alle aldre. Men du må godt være underlig og tosset. Besvar i højst 2-3 sætninger. Afslut med en afsluttende bemærkning for at give en naturlig overgang til den næste person.',
     'llm-error' => 'Jeg er desværre ikke i stand til at spå din fremtid lige nu. Prøv igen senere.',
