@@ -6,6 +6,7 @@
 #define PIR_SENSOR_PIN 21
 #define RELAY_FANS_PIN 12
 #define RELAY_FOG_PIN 27
+#define INTERNAL_LED_PIN 13
 
 #define DEVICE_NAME "fog-screen"
 #define WIFI_CONNECT_TIMEOUT_MS 30000
@@ -23,6 +24,9 @@ void setup() {
 
   pinMode(RELAY_FOG_PIN, OUTPUT);
   digitalWrite(RELAY_FOG_PIN, LOW);
+
+  pinMode(INTERNAL_LED_PIN, OUTPUT);
+  digitalWrite(INTERNAL_LED_PIN, LOW);
 
   pinMode(PIR_SENSOR_PIN, INPUT);
   
@@ -64,6 +68,7 @@ void loop() {
   
   pirValue = digitalRead(PIR_SENSOR_PIN);
   if (pirValue == HIGH) {
+    digitalWrite(INTERNAL_LED_PIN, HIGH);
     Serial.println("Motion detected.");
     TelnetStream.println("Motion detected.");
 
@@ -82,6 +87,7 @@ void loop() {
     ArduinoOTA.handle();
 
     delay(30000);
+    digitalWrite(INTERNAL_LED_PIN, LOW);
   }
    
   delay(100);
@@ -89,6 +95,7 @@ void loop() {
 
 void notifyProjector() {
   NetworkClient client;
+  client.setTimeout(5000);
 
   if (client.connect(PROJECTOR_IP_ADDRESS, PROJECTOR_PORT)) {
     Serial.println("Connected to TCP server");
