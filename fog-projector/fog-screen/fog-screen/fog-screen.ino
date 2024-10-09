@@ -4,8 +4,8 @@
 #include <TelnetStream.h>
 
 #define PIR_SENSOR_PIN 21
-#define RELAY_FANS_PIN 12
-#define RELAY_FOG_PIN 27
+#define RELAY_FANS_PIN 18
+#define RELAY_FOG_PIN 19
 #define INTERNAL_LED_PIN 13
 
 #define DEVICE_NAME "fog-screen"
@@ -17,13 +17,14 @@
 WiFiMulti WiFiMulti;
 
 int pirValue;
+int state = HIGH;
 
 void setup() {  
   pinMode(RELAY_FANS_PIN, OUTPUT);
-  digitalWrite(RELAY_FANS_PIN, LOW);
+  digitalWrite(RELAY_FANS_PIN, HIGH);
 
   pinMode(RELAY_FOG_PIN, OUTPUT);
-  digitalWrite(RELAY_FOG_PIN, LOW);
+  digitalWrite(RELAY_FOG_PIN, HIGH);
 
   pinMode(INTERNAL_LED_PIN, OUTPUT);
   digitalWrite(INTERNAL_LED_PIN, LOW);
@@ -52,14 +53,16 @@ void initWiFi() {
   if (WiFi.status() == WL_CONNECTED) {
     ArduinoOTA.setHostname(DEVICE_NAME);
     ArduinoOTA.begin();
+
+    TelnetStream.begin();
   
     Serial.print("IP address: ");
     Serial.println(WiFi.localIP());
+    TelnetStream.println(WiFi.localIP());
 
     Serial.print("RRSI: ");
     Serial.println(WiFi.RSSI());
-
-    TelnetStream.begin();
+    TelnetStream.println(WiFi.RSSI());
   }
 }
 
@@ -72,21 +75,36 @@ void loop() {
     Serial.println("Motion detected.");
     TelnetStream.println("Motion detected.");
 
-    digitalWrite(RELAY_FANS_PIN, HIGH);
-    delay(2000);
-
     notifyProjector();
 
-    digitalWrite(RELAY_FOG_PIN, HIGH);
-    delay(2000);
-    digitalWrite(RELAY_FOG_PIN, LOW);
-
-    delay(2000);
     digitalWrite(RELAY_FANS_PIN, LOW);
+    delay(2000); // Run fans for 2s before starting fog machine
 
-    ArduinoOTA.handle();
+    digitalWrite(RELAY_FOG_PIN, LOW);
+    delay(5000);
+    digitalWrite(RELAY_FOG_PIN, HIGH);
 
-    delay(30000);
+    // Keep running fans for another 30s
+    for (int i = 0; i < 300; i++) {
+      ArduinoOTA.handle();
+      delay(100);
+    }
+
+    digitalWrite(RELAY_FANS_PIN, HIGH);
+
+    // Pause for 30s before waiting for motion again
+    for (int i = 0; i < 300; i++) {
+      ArduinoOTA.handle();
+      delay(100);
+
+      if (state == LOW) {
+        state = HIGH;
+      } else {
+        state = LOW;
+      }
+
+      digitalWrite(INTERNAL_LED_PIN, state);
+    }
     digitalWrite(INTERNAL_LED_PIN, LOW);
   }
    
@@ -99,9 +117,11 @@ void notifyProjector() {
 
   if (client.connect(PROJECTOR_IP_ADDRESS, PROJECTOR_PORT)) {
     Serial.println("Connected to TCP server");
+    TelnetStream.println("Sent TCP trigger");
     client.print("trigger");
     client.stop();
   } else {
     Serial.println("Failed to connect to TCP server");
+    TelnetStream.println("Failed to send TCP trigger");
   }
 }
