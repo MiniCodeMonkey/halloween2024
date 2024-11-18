@@ -51,7 +51,7 @@ class Server extends Command
         $this->audioGenerator = $audioGenerator;
         $this->predictionMaker = $predictionMaker;
         $this->audioRecorder = $audioRecorder;
-        $this->pushButton = new PushButton(config('pinouts.push_button'));
+        $this->pushButton = new PushButton(config('pinouts.push_button'), $this->getOutput());
 
         $this->frontLights = new Relay(config('pinouts.front_lights'));
         $this->frontLights->turnOn();

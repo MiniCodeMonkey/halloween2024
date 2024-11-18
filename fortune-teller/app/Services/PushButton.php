@@ -4,14 +4,18 @@ namespace App\Services;
 
 use DanJohnson95\Pinout\Entities\Pin;
 use DanJohnson95\Pinout\Pinout;
+use Illuminate\Console\OutputStyle;
 use Throwable;
 
 class PushButton
 {
     private ?Pin $buttonPin;
+    private ?OutputStyle $consoleOutput;
 
-    public function __construct(int $pinNumber)
+    public function __construct(int $pinNumber, ?OutputStyle $consoleOutput)
     {
+        $this->consoleOutput = $consoleOutput;
+
         try {
             $this->buttonPin = Pinout::pin($pinNumber);
             $this->buttonPin->makeInput();
@@ -23,6 +27,10 @@ class PushButton
 
     public function isPushed(): bool
     {
-        return $this->buttonPin === null || $this->buttonPin->isOn();
+        if ($this->buttonPin === null && $this->consoleOutput) {
+            return $this->consoleOutput->confirm('Ready to continue?');
+        }
+
+        return $this->buttonPin->isOn();
     }
 }
